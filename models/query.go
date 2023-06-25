@@ -1,5 +1,5 @@
 package models
 
 type QueryRequest struct {
-	Query string `json:"query"`
+	Query string `validate:"required" json:"query"`
 }
