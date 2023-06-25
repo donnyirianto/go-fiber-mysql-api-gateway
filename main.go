@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -64,7 +65,7 @@ func createLog(level, message string) error {
 
 // register roting
 func registerRoutes(api fiber.Router) {
-	// Routing untuk dynamic SQL query /mysql/query method POST {query : tulis query sql}
+	// Routing for dynamic SQL query /mysql/query method POST {query : write SQL query}
 	api.Post("/mysql/query", func(c *fiber.Ctx) error {
 		// Retrieve request body
 		var request models.QueryRequest
@@ -75,79 +76,96 @@ func registerRoutes(api fiber.Router) {
 
 		query := request.Query
 
-		// Execute Query
-		rows, err := models.DB.Raw(query).Rows()
-		if err != nil {
-			log.Println(err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"code":    fiber.StatusInternalServerError,
-				"message": "Error, Pastikan kembali SQL query Anda!",
-				"data":    nil,
-			})
-		}
+		// Split the query
+		queries := strings.Split(query, ";")
 
-		defer rows.Close()
-
-		// ambil nama column names dari query result
-		columns, err := rows.Columns()
-		if err != nil {
-			log.Println(err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"code":    fiber.StatusInternalServerError,
-				"message": "Error pembacaan nama column",
-				"data":    nil,
-			})
-		}
-
-		// buat slice dan simpan sebagai query result
-		results := make([]map[string]interface{}, 0)
-
-		// Iterate hasil query
-		for rows.Next() {
-
-			values := make([]interface{}, len(columns))
-			valuePointers := make([]interface{}, len(columns))
-
-			for i := range columns {
-				valuePointers[i] = &values[i]
+		// Remove empty queries
+		cleanedQueries := make([]string, 0)
+		for _, q := range queries {
+			trimmedQuery := strings.TrimSpace(q)
+			if trimmedQuery != "" {
+				cleanedQueries = append(cleanedQueries, trimmedQuery)
 			}
+		}
 
-			err := rows.Scan(valuePointers...)
+		// Execute setiap query
+		results := make([]interface{}, len(cleanedQueries))
+
+		for i, q := range cleanedQueries {
+			rows, err := models.DB.Raw(q).Rows()
 			if err != nil {
 				log.Println(err)
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"code":    fiber.StatusInternalServerError,
-					"message": "Error pembacaan row values",
+					"message": "Error, Please check your SQL query!",
+					"data":    nil,
+				})
+			}
+			defer rows.Close()
+
+			// Store hasil query ke results
+			columns, err := rows.Columns()
+			if err != nil {
+				log.Println(err)
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"code":    fiber.StatusInternalServerError,
+					"message": "Error pembacaan column names",
 					"data":    nil,
 				})
 			}
 
-			rowData := make(map[string]interface{})
+			// Create a slice to hold the query result
+			queryResult := make([]map[string]interface{}, 0)
 
-			for i, col := range columns {
-				value := values[i]
-				if v, ok := value.(time.Time); ok {
-					rowData[col] = v.Local().Format("2006-01-02 15:04:05")
-				} else if byteSlice, ok := value.([]byte); ok {
-					rowData[col] = string(byteSlice)
-				} else {
-					rowData[col] = value
+			// Iterate over the query results
+			for rows.Next() {
+				values := make([]interface{}, len(columns))
+				valuePointers := make([]interface{}, len(columns))
+
+				for i := range columns {
+					valuePointers[i] = &values[i]
 				}
+
+				err := rows.Scan(valuePointers...)
+				if err != nil {
+					log.Println(err)
+					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+						"code":    fiber.StatusInternalServerError,
+						"message": "Error pembacaan row values",
+						"data":    nil,
+					})
+				}
+
+				rowData := make(map[string]interface{})
+
+				for i, col := range columns {
+					value := values[i]
+					if v, ok := value.(time.Time); ok {
+						rowData[col] = v.Local().Format("2006-01-02 15:04:05")
+					} else if byteSlice, ok := value.([]byte); ok {
+						rowData[col] = string(byteSlice)
+					} else {
+						rowData[col] = value
+					}
+				}
+
+				// Append the row data ke query result
+				queryResult = append(queryResult, rowData)
 			}
 
-			// Append the row data to the results slice
-			results = append(results, rowData)
+			// Store query result ke results slice
+			results[i] = queryResult
 		}
 
-		// Buat response dalam format JSON
-		response := map[string]interface{}{
+		// Prepare response
+		response := fiber.Map{
 			"code":    fiber.StatusOK,
-			"message": "Sukses",
+			"message": "Success",
 			"data":    results,
 		}
 
 		// Return response
 		return c.JSON(response)
-
 	})
+
 }

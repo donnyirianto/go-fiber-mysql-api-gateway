@@ -33,3 +33,5 @@ CREATE TABLE LOGS (
     PARTITION p11 VALUES LESS THAN (TO_DAYS('2023-12-01'))
 );
 CREATE INDEX idx_created_at ON LOGS (created_at);
+
+go build -ldflags="-s -w" main.go
