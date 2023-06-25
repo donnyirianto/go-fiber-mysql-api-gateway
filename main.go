@@ -66,7 +66,7 @@ func registerRoutes(api fiber.Router) {
 		var request models.QueryRequest
 		err := c.BodyParser(&request)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		query := request.Query
@@ -74,14 +74,25 @@ func registerRoutes(api fiber.Router) {
 		// Execute Query
 		rows, err := models.DB.Raw(query).Rows()
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"code":    fiber.StatusInternalServerError,
+				"message": "Error, Pastikan kembali SQL query Anda!",
+				"data":    nil,
+			})
 		}
+
 		defer rows.Close()
 
 		// ambil nama column names dari query result
 		columns, err := rows.Columns()
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"code":    fiber.StatusInternalServerError,
+				"message": "Error pembacaan nama column",
+				"data":    nil,
+			})
 		}
 
 		// buat slice dan simpan sebagai query result
@@ -99,7 +110,12 @@ func registerRoutes(api fiber.Router) {
 
 			err := rows.Scan(valuePointers...)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"code":    fiber.StatusInternalServerError,
+					"message": "Error pembacaan row values",
+					"data":    nil,
+				})
 			}
 
 			rowData := make(map[string]interface{})
