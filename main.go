@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/zaranggi/go-be-fiber/models"
+	"github.com/zaranggi/go-fiber-mysql-api-gateway/models"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/zaranggi/go-be-fiber
+module github.com/zaranggi/go-fiber-mysql-api-gateway
 
 go 1.20
 
