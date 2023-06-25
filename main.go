@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/zaranggi/go-fiber-mysql-api-gateway/models"
 )
@@ -13,7 +14,10 @@ func main() {
 	// Panggil Connection Model
 	models.ConnectDatabase()
 	// create new fiber
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
+	})
 	// group routing ke /api/v1
 	api := app.Group("/api/v1")
 
