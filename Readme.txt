@@ -2,7 +2,7 @@ Go Mysql Gateway
 
 merupakan Api gateway untuk mengakses database mysql.
 setiap request akan dicatat dalam log pada table logs
-
+/api/v1/mysql/query
 Stack :
 1. Go
 2. Gorm

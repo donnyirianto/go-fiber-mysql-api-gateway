@@ -2,12 +2,10 @@ package models
 
 import (
 	"log"
-	"os"
 
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -18,30 +16,12 @@ func ConnectDatabase() {
 
 	dsn := viper.GetString("DB_DSN")
 
-	// Create a new logger
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // Custom  log output
-		logger.Config{
-			SlowThreshold:             200, // Set the threshold untuk slow SQL queries ( milliseconds)
-			LogLevel:                  logger.Info,
-			IgnoreRecordNotFoundError: true,
-			Colorful:                  false,
-		},
-	)
-
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: newLogger, // Buat custom logger
-	})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	DB = db
-	// Auto-migrate
-	err = DB.AutoMigrate(&Log{})
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func loadConfig() {

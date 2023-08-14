@@ -1,0 +1,17 @@
+[Unit]
+Description=Go Fiber Mysql Api Gateway
+After=network.target
+
+[Service]
+ExecStart=/home/donny/project_rnd/go-fiber-mysql-api-gateway/go-fiber-mysql-api-gateway
+WorkingDirectory=/home/donny/project_rnd/go-fiber-mysql-api-gateway/
+User=donny
+Group=donny
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=go-fiber-mysql-api-gateway
+
+[Install]
+WantedBy=multi-user.target

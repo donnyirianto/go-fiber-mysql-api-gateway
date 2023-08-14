@@ -1,0 +1,17 @@
+[Unit]
+Description=Go Fiber Mysql Api Gateway
+After=network.target
+
+[Service]
+ExecStart=/root/iris/go-fiber-mysql-api-gateway
+WorkingDirectory=/root/iris/
+User=root
+Group=root
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=mysql-api-gateway
+
+[Install]
+WantedBy=multi-user.target

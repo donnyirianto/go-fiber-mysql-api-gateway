@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -22,45 +21,10 @@ func main() {
 	// group routing ke /api/v1
 	api := app.Group("/api/v1")
 
-	//create middleware untuk pencatatan log ke MySQL
-	app.Use(func(c *fiber.Ctx) error {
-		// Capture request information
-		requestTime := time.Now().Format("2006-01-02 15:04:05")
-		method := c.Method()
-		path := c.Path()
-		ip := c.IP()
-		body := string(c.Body())
-
-		// Insert log entry
-		err := createLog("info", fmt.Sprintf("Request: %s %s %s %s %s", requestTime, ip, method, path, body))
-		if err != nil {
-			log.Println("Failed to create log entry:", err)
-		}
-
-		// Continue to next middleware or route handler
-		return c.Next()
-	})
-
 	// Register endpoint
 	registerRoutes(api)
 	// listen port
-	app.Listen(":8000")
-}
-
-// func insert log
-func createLog(level, message string) error {
-	logEntry := &models.Log{
-		Level:     level,
-		Message:   message,
-		CreatedAt: time.Now(),
-	}
-
-	result := models.DB.Create(logEntry)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
+	app.Listen(":7272")
 }
 
 // register roting
